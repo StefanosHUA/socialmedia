@@ -1,6 +1,7 @@
 {
     "compilerOptions": {
         "module": "NodeNext",
+        "target": "ES2018",
         "moduleResolution": "node",
         "baseUrl": "src",
         "outDir": "dist",
