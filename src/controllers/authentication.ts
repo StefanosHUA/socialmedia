@@ -2,6 +2,7 @@ import express from 'express';
 import jwt from 'jsonwebtoken'
 import { getUserByEmail, createuser, getUserBySessionToken } from '../db/users';
 import { random, authentication } from '../helpers';
+import { get, merge } from 'lodash';
 require('dotenv').config()
 
 export const register = async(req: express.Request, res: express.Response) => {
@@ -84,13 +85,13 @@ export const login = async (req: express.Request, res: express.Response) => {
         
         // res.cookie('STEF-AUTH', user.authentication.sessionToken, {domain: 'localhost', path: '/'}); MEXRI EDW
 
-        const token = jwt.sign({user}, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "15m"});
+        const accessToken = jwt.sign({user}, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "15m"});
         const refreshToken = jwt.sign({user}, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "2d"});
         user.authentication.refreshToken = refreshToken
-
+        
         res.cookie("jwt", refreshToken, {
             httpOnly: true, maxAge: 48 * 60 * 60 * 1000
-        }).json({ user, token }).end();
+        }).json({ user, accessToken }).end();
 
             
     } catch (error) {
@@ -104,20 +105,26 @@ export const login = async (req: express.Request, res: express.Response) => {
 
 export const refreshTokens = async(req: express.Request, res: express.Response) => {
     const cookies = req.cookies
+    const { email } = req.body
+
     if(!cookies?.jwt) return res.sendStatus(401);
-    console.log(cookies.jwt);
+
+    // console.log(cookies.jwt);
+    
     const refreshToken = cookies.jwt;
 
-    const foundUser = await getUserBySessionToken(refreshToken);
+    const head = req.headers['authorization'];
+    const foundToken = head.split(' ')[1];
 
-    console.log(foundUser);
+    const foundUser = await getUserByEmail(email)
 
-    if(!foundUser) return res.sendStatus(403);
+    // console.log(foundToken);
+    if(!foundToken) return res.sendStatus(403);
 
     jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err:any, decoded:any) => {
-        if(err || foundUser.username !== decoded.username) return res.sendStatus(403);
+        if(err) return res.sendStatus(403);
         const accessToken = jwt.sign({foundUser}, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "15m"});
-        res.json({ accessToken }) 
+        return res.json({ foundUser, accessToken });
     }
     );
 }

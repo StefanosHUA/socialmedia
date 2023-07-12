@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import { Post } from "./posts";
+const MyObjectId = mongoose.Types.ObjectId;
 
 
 const UserSchema = new mongoose.Schema({
@@ -10,6 +12,7 @@ const UserSchema = new mongoose.Schema({
         refreshToken: { type: String, select: false},
 
     },
+    posts:[{type: mongoose.Schema.Types.ObjectId, ref: 'Post' }]
 });
 
 
