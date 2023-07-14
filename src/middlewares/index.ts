@@ -3,6 +3,7 @@ import { get, merge } from 'lodash';
 import jwt from 'jsonwebtoken'
 import { getUserBySessionToken, getUserById } from '../db/users';
 import { getPostById } from '../db/posts';
+import { getcommentById } from '../db/comments';
 import { Request } from "express"
 
 declare module "express" { 
@@ -16,7 +17,7 @@ declare module "express" {
 export const cookieJWTAuth = async(req: express.Request, res: express.Response, next: express.NextFunction) => {
     try{
     const { id } = req.body;
-    const existingUser = await getUserById(id)
+    const existingUser = req.user
     
     const { postid } = req.params;
     const existingPost = await getPostById(postid)
@@ -45,12 +46,6 @@ export const cookieJWTAuth = async(req: express.Request, res: express.Response, 
     
 };
 
-// req.user = user;
-        // next();
-    // } catch(error) {
-    //     // res.clearCookie("token").sendStatus(403);
-        
-    // }
 
 export const isOwner = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     try {
@@ -83,19 +78,46 @@ export const isPostOwner = async (req: express.Request, res: express.Response, n
         const currentPost = await getPostById(id)
         // console.log("\ncurrent post is:", currentPost)
 
-        const currentuserId = req.body
+        const currentuserId = req.user
 
-        console.log(JSON.stringify(currentuserId.currentuserId))
+        // console.log(JSON.stringify(currentuserId.currentuserId))
 
-        console.log("\n current user id is: ", currentuserId)
+        console.log(req.user)
 
         if (!currentPost) {
             return res.sendStatus(403);
         }
 
-        if (currentuserId.currentuserId != currentPost.id){
+        if (currentPost.user != currentuserId._id){
             // console.log("here", currentPost.userId)
             // console.log("", currentuserId.currentuserId)
+            return res.sendStatus(403);
+        
+        }
+        next();
+
+    } catch (error) {
+        console.log(error);
+        return res.sendStatus(400);
+    }
+}
+
+
+export const isCommentOwner = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    try {
+        const { id } = req.params;
+        const currentCom = await getcommentById(id)
+
+        const currentuserId = req.user
+
+        // console.log("\n", currentuserId._id)
+        
+        if (!currentCom) {
+            return res.sendStatus(403);
+        }
+
+        if (currentCom.user != currentuserId._id){
+            
             return res.sendStatus(403);
         
         }

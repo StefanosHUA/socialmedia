@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
-import { Post } from "./posts";
-const MyObjectId = mongoose.Types.ObjectId;
-
+const mongoosePaginate = require('mongoose-paginate');
+const { ObjectId } = mongoose.Schema.Types;
 
 const UserSchema = new mongoose.Schema({
     username: { type: String, required: true},
@@ -12,10 +11,14 @@ const UserSchema = new mongoose.Schema({
         refreshToken: { type: String, select: false},
 
     },
-    posts:[{type: mongoose.Schema.Types.ObjectId, ref: 'Post' }]
+    posts:[{user: { type: ObjectId, ref: "Post" } }],
+    comments:[{ type: mongoose.Schema.Types.ObjectId, ref: 'comments'}]
+    
 });
 
 
+
+UserSchema.plugin(mongoosePaginate);
 export const UserModel = mongoose.model('User', UserSchema);
 
 export const getUsers = () => UserModel.find();

@@ -1,9 +1,10 @@
 import express from 'express';
-
-import { deleteUserById, getUserById, getUsers } from '../db/users';
-import { getPostById, deletePostById } from '../db/posts';
+import { deleteUserById, getUserByEmail, getUserById, getUsers } from '../db/users';
+import { getPostById, deletePostById, Post, getPostByUserId, getallposts } from '../db/posts';
 import { newPost } from '../db/posts';
 import { get, merge } from 'lodash';
+import { ObjectId } from 'mongodb';
+
 
 export const createNewPost = async(req: express.Request, res: express.Response) => {
     try{
@@ -12,13 +13,18 @@ export const createNewPost = async(req: express.Request, res: express.Response) 
         if ( !desc || !img) {
             return res.sendStatus(400);
         }
-        
+        const currUser = await getUserById(req.user._id) 
+
         const new_post = await newPost ({
             desc,
-            img, 
+            img,
+            user: req.user._id
             
         });
-        console.log(new_post.user)
+
+        currUser.posts.push(new_post)
+        // console.log(currUser.posts) 
+        
         merge(req, { identity: new_post })
         return res.status(200).json(new_post).end();
 
@@ -62,6 +68,12 @@ export const deletePost = async (req: express.Request, res: express.Response) =>
     try {
         const { id } = req.params;
 
+        const getPost = await getPostById(id);
+
+        if (!getPost){
+            return res.sendStatus(400);
+        }
+
         const deletedPost = await deletePostById(id);
 
         return res.json(deletedPost);
@@ -73,24 +85,88 @@ export const deletePost = async (req: express.Request, res: express.Response) =>
 }
 
 
-export const newComment = async(req:express.Request, res: express.Response) => {
-    try {
-        const { id } = req.params;
-        const { comment } = req.body;
 
-        if (!comment){
-            return res.sendStatus(400);
-        }
+export const getMyPosts = async (req: express.Request, res: express.Response) => {
+    try{
 
-        const post = await getPostById(id);
-
-        post.comments = comment
+        const currUser = await getUserById(req.user._id)
         
-        
-        await post.save();
-        return res.status(200).json(post).end();
 
-    }catch (error) {
+        var { pageNum } = req.params
+
+        const myPosts = await getPostByUserId(currUser.id) 
+        function getPaginatedData(page: number, pageSize: number): any {
+            const startIndex = (page - 1) * pageSize;
+            const endIndex = page * pageSize;
+            const paginatedData = myPosts.slice(startIndex, endIndex);
+            const totalItems = myPosts.length;
+            const totalPages = Math.ceil(totalItems / pageSize);
+          
+            return {
+              data: paginatedData,
+             
+            currentPage: page,
+            totalPages: totalPages,
+            totalItems: totalItems,
+              
+            };
+          }
+
+        var y:number = +pageNum
+
+        // const page = 1;
+        const pageSize = 10;
+        const result = getPaginatedData(y, pageSize);
+        // console.log(currUser.id)
+
+        return res.status(200).json(result);
+        
+    
+
+    } catch (error) {
+        console.log(error);
+        return res.sendStatus(400);
+    }
+}
+
+export const getUserPosts = async (req: express.Request, res: express.Response) => {
+    try{
+
+        var { pageNum } = req.params
+        const { userEmail } = req.body
+        const currUser = await getUserByEmail(userEmail)
+        
+
+        const myPosts = await getPostByUserId(currUser.id) 
+        function getPaginatedData(page: number, pageSize: number): any {
+            const startIndex = (page - 1) * pageSize;
+            const endIndex = page * pageSize;
+            const paginatedData = myPosts.slice(startIndex, endIndex);
+            const totalItems = myPosts.length;
+            const totalPages = Math.ceil(totalItems / pageSize);
+          
+            return {
+              data: paginatedData,
+             
+            currentPage: page,
+            totalPages: totalPages,
+            totalItems: totalItems,
+              
+            };
+          }
+
+        var y:number = +pageNum
+
+        // const page = 1;
+        const pageSize = 10;
+        const result = getPaginatedData(y, pageSize);
+        // console.log(currUser.id)
+
+        return res.status(200).json(result);
+        
+    
+
+    } catch (error) {
         console.log(error);
         return res.sendStatus(400);
     }
@@ -100,8 +176,33 @@ export const newComment = async(req:express.Request, res: express.Response) => {
 
 export const getAllUsers = async (req: express.Request, res: express.Response) => {
     try{
-        const users = await getUsers();
-        return res.status(200).json(users);
+        
+        var { pageNum } = req.params
+
+        const users = await getUsers(); 
+        function getPaginatedData(page: number, pageSize: number): any {
+            const startIndex = (page - 1) * pageSize;
+            const endIndex = page * pageSize;
+            const paginatedData = users.slice(startIndex, endIndex);
+            const totalItems = users.length;
+            const totalPages = Math.ceil(totalItems / pageSize);
+          
+            return {
+              data: paginatedData,
+             
+            currentPage: page,
+            totalPages: totalPages,
+            totalItems: totalItems,
+              
+            };
+          }
+
+        var y:number = +pageNum
+
+        // const page = 1;
+        const pageSize = 10;
+        const result = getPaginatedData(y, pageSize);
+        return res.status(200).json(result);
 
     } catch (error) {
         console.log(error);

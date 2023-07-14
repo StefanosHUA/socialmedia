@@ -30,20 +30,8 @@ export const register = async(req: express.Request, res: express.Response) => {
                 
             },
         });
+        merge(req, { identity: user })
         
-        
-
-        // const token = jwt.sign({user}, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "15m"});
-        // const refreshToken = jwt.sign({user}, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "2d"});
-
-        // user.authentication.refreshToken = refreshToken
-
-        // res.cookie("jwt", refreshToken, {
-        //     httpOnly: true, maxAge: 48 * 60 * 60 * 1000
-        // }).json({ user, token }).end();
-
-
-        // res.json({ token})
         return res.status(200).json(user).end();
 
     
@@ -88,7 +76,7 @@ export const login = async (req: express.Request, res: express.Response) => {
         const accessToken = jwt.sign({user}, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "15m"});
         const refreshToken = jwt.sign({user}, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "2d"});
         user.authentication.refreshToken = refreshToken
-        
+        merge(req, { identity: user })
         res.cookie("jwt", refreshToken, {
             httpOnly: true, maxAge: 48 * 60 * 60 * 1000
         }).json({ user, accessToken }).end();
