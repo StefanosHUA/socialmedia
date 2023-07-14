@@ -85,6 +85,51 @@ export const deletePost = async (req: express.Request, res: express.Response) =>
 }
 
 
+export const getAllPosts = async (req: express.Request, res: express.Response) => {
+    try{
+
+        const allposts = await getallposts()
+
+        // const currUser = await getUserById(req.user._id)
+
+        var { pageNum } = req.params
+
+        // const myPosts = await getPostByUserId(currUser.id) 
+
+        function getPaginatedData(page: number, pageSize: number): any {
+            const startIndex = (page - 1) * pageSize;
+            const endIndex = page * pageSize;
+            const paginatedData = allposts.slice(startIndex, endIndex);
+            const totalItems = allposts.length;
+            const totalPages = Math.ceil(totalItems / pageSize);
+          
+            return {
+              data: paginatedData,
+             
+            currentPage: page,
+            totalPages: totalPages,
+            totalItems: totalItems,
+              
+            };
+          }
+
+        var y:number = +pageNum
+
+        // const page = 1;
+        const pageSize = 10;
+        const result = getPaginatedData(y, pageSize);
+        // console.log(currUser.id)
+
+        return res.status(200).json(result);
+        
+    
+
+    } catch (error) {
+        console.log(error);
+        return res.sendStatus(400);
+    }
+}
+
 
 export const getMyPosts = async (req: express.Request, res: express.Response) => {
     try{

@@ -21,6 +21,7 @@ commentsSchema.path('post').ref('Post');
 ;
 export const comments = mongoose.model('comments', commentsSchema);
 
+export const getCommentsbyPostId = (post: string) => comments.find({ post })
 export const getComments = () => comments.find()
 export const newComment = (values: Record<string, any>) => new comments(values).save().then((comments) => comments.toObject());
 export const getcommentById = (id: string) => comments.findById(id);

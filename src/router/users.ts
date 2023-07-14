@@ -1,6 +1,6 @@
 import express from 'express'
-import { createComment, updateComment, deleteComment  } from '../controllers/comments';
-import { deleteUser, getAllUsers, updateUser, createNewPost, updatePost, deletePost, getMyPosts, getUserPosts  } from '../controllers/users';
+import { createComment, updateComment, deleteComment, getCommentsfromPost  } from '../controllers/comments';
+import { deleteUser, getAllUsers, updateUser, createNewPost, updatePost, deletePost, getMyPosts, getUserPosts, getAllPosts } from '../controllers/users';
 import { isAuthenticated, isOwner, cookieJWTAuth, isPostOwner, isCommentOwner } from '../middlewares';
 
 
@@ -21,6 +21,7 @@ export default (router: express.Router) => {
     router.get("/getMyPosts/:pageNum", cookieJWTAuth, getMyPosts);
 
     //GET ALL POSTS
+    router.get("/getAllPosts/:pageNum", cookieJWTAuth, getAllPosts);
 
     //GET A USER'S POSTS
     router.get("/getPosts/:pageNum", cookieJWTAuth, getUserPosts);
@@ -31,5 +32,6 @@ export default (router: express.Router) => {
     router.delete("/deleteComment/:id", cookieJWTAuth, isCommentOwner, deleteComment);
 
     //GET POST COMMENTS
+    router.get("/getComments/:id/:pageNum", cookieJWTAuth, getCommentsfromPost);
 
 };
