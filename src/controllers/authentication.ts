@@ -20,12 +20,11 @@ export const register = async(req: express.Request, res: express.Response) => {
         }
 
 
-        const salt =  random();
+        const salt =  process.env.salt
         const user = await createuser ({
             email,
             username,
             authentication: {
-                salt,
                 password: authentication(salt, password),
                 
             },
@@ -59,7 +58,7 @@ export const login = async (req: express.Request, res: express.Response) => {
             return res.sendStatus(400);
         }
 
-        const expectedHash = authentication(user.authentication.salt, password);
+        const expectedHash = authentication(process.env.salt, password);
 
         if (user.authentication.password != expectedHash){
             return res.sendStatus(403);

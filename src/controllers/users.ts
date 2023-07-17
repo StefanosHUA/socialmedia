@@ -1,5 +1,5 @@
 import express from 'express';
-import { deleteUserById, getUserByEmail, getUserById, getUsers } from '../db/users';
+import { UserModel, deleteUserById, getUserByEmail, getUserById, getUsers } from '../db/users';
 import { getPostById, deletePostById, Post, getPostByUserId, getallposts } from '../db/posts';
 import { newPost } from '../db/posts';
 import { get, merge } from 'lodash';
@@ -85,176 +85,112 @@ export const deletePost = async (req: express.Request, res: express.Response) =>
 }
 
 
-export const getAllPosts = async (req: express.Request, res: express.Response) => {
-    try{
-
-        const allposts = await getallposts()
-
-        // const currUser = await getUserById(req.user._id)
-
-        var { pageNum } = req.params
-
-        // const myPosts = await getPostByUserId(currUser.id) 
-
-        function getPaginatedData(page: number, pageSize: number): any {
-            const startIndex = (page - 1) * pageSize;
-            const endIndex = page * pageSize;
-            const paginatedData = allposts.slice(startIndex, endIndex);
-            const totalItems = allposts.length;
-            const totalPages = Math.ceil(totalItems / pageSize);
-          
-            return {
-              data: paginatedData,
-             
-            currentPage: page,
-            totalPages: totalPages,
-            totalItems: totalItems,
-              
-            };
-          }
-
-        var y:number = +pageNum
-
-        // const page = 1;
-        const pageSize = 10;
-        const result = getPaginatedData(y, pageSize);
-        // console.log(currUser.id)
-
-        return res.status(200).json(result);
-        
-    
-
-    } catch (error) {
-        console.log(error);
-        return res.sendStatus(400);
+export const GetPosts = async (req: express.Request, res: express.Response) => {
+    // destructure page and limit and set default values
+    const { page = 1, limit = 10 } = req.query;
+  
+    try {
+      // execute query with page and limit values
+      const posts = await Post.find()
+        .limit((limit as any) * 1)
+        .skip(((page as any) - 1) * (limit as any))
+        .exec();
+  
+      // get total documents in the Posts collection
+      const count = await Post.countDocuments();
+  
+      // return response with posts, total pages, and current page
+      res.json({
+        posts,
+        totalPages: Math.ceil(count / (limit as any)),
+        currentPage: page,
+      });
+    } catch (err) {
+      console.error(err.message);
     }
-}
-
+  };
 
 export const getMyPosts = async (req: express.Request, res: express.Response) => {
+    const { page = 1, limit = 10 } = req.query;
     try{
+            
+    const currUser = await getUserById(req.user._id)
+    const myPosts = await getPostByUserId(currUser.id)
+        // execute query with page and limit values
+      
+      .limit((limit as any) * 1)
+      .skip(((page as any) - 1) * (limit as any))
+      .exec();
 
-        const currUser = await getUserById(req.user._id)
-        
+    // get total documents in the Posts collection
+    const count = myPosts.length
 
-        var { pageNum } = req.params
-
-        const myPosts = await getPostByUserId(currUser.id) 
-        function getPaginatedData(page: number, pageSize: number): any {
-            const startIndex = (page - 1) * pageSize;
-            const endIndex = page * pageSize;
-            const paginatedData = myPosts.slice(startIndex, endIndex);
-            const totalItems = myPosts.length;
-            const totalPages = Math.ceil(totalItems / pageSize);
-          
-            return {
-              data: paginatedData,
-             
-            currentPage: page,
-            totalPages: totalPages,
-            totalItems: totalItems,
-              
-            };
-          }
-
-        var y:number = +pageNum
-
-        // const page = 1;
-        const pageSize = 10;
-        const result = getPaginatedData(y, pageSize);
-        // console.log(currUser.id)
-
-        return res.status(200).json(result);
-        
-    
-
-    } catch (error) {
-        console.log(error);
-        return res.sendStatus(400);
-    }
+    // return response with posts, total pages, and current page
+    res.json({
+      myPosts,
+      totalPages: Math.ceil(count / (limit as any)),
+      currentPage: page,
+    });
+  } catch (err) {
+    console.error(err.message);
+  }
 }
 
 export const getUserPosts = async (req: express.Request, res: express.Response) => {
+    const { page = 1, limit = 10 } = req.query;
     try{
-
-        var { pageNum } = req.params
         const { userEmail } = req.body
         const currUser = await getUserByEmail(userEmail)
-        
-
         const myPosts = await getPostByUserId(currUser.id) 
-        function getPaginatedData(page: number, pageSize: number): any {
-            const startIndex = (page - 1) * pageSize;
-            const endIndex = page * pageSize;
-            const paginatedData = myPosts.slice(startIndex, endIndex);
-            const totalItems = myPosts.length;
-            const totalPages = Math.ceil(totalItems / pageSize);
+            // execute query with page and limit values
           
-            return {
-              data: paginatedData,
-             
-            currentPage: page,
-            totalPages: totalPages,
-            totalItems: totalItems,
-              
-            };
-          }
-
-        var y:number = +pageNum
-
-        // const page = 1;
-        const pageSize = 10;
-        const result = getPaginatedData(y, pageSize);
-        // console.log(currUser.id)
-
-        return res.status(200).json(result);
-        
+          .limit((limit as any) * 1)
+          .skip(((page as any) - 1) * (limit as any))
+          .exec();
     
-
-    } catch (error) {
-        console.log(error);
-        return res.sendStatus(400);
+        // get total documents in the Posts collection
+        const count = myPosts.length
+    
+        // return response with posts, total pages, and current page
+        res.json({
+          myPosts,
+          totalPages: Math.ceil(count / (limit as any)),
+          currentPage: page,
+        });
+      } catch (err) {
+        console.error(err.message);
+      }
     }
-}
+
 
 
 
 export const getAllUsers = async (req: express.Request, res: express.Response) => {
+    const { page = 1, limit = 10 } = req.query;
     try{
-        
-        var { pageNum } = req.params
-
-        const users = await getUsers(); 
-        function getPaginatedData(page: number, pageSize: number): any {
-            const startIndex = (page - 1) * pageSize;
-            const endIndex = page * pageSize;
-            const paginatedData = users.slice(startIndex, endIndex);
-            const totalItems = users.length;
-            const totalPages = Math.ceil(totalItems / pageSize);
-          
-            return {
-              data: paginatedData,
-             
-            currentPage: page,
-            totalPages: totalPages,
-            totalItems: totalItems,
-              
-            };
-          }
-
-        var y:number = +pageNum
-
-        // const page = 1;
-        const pageSize = 10;
-        const result = getPaginatedData(y, pageSize);
-        return res.status(200).json(result);
-
-    } catch (error) {
-        console.log(error);
-        return res.sendStatus(400);
+        const { userEmail } = req.body
+        const currUser = await getUserByEmail(userEmail)
+        const allusers = await UserModel.find()
+            // execute query with page and limit values
+          .limit((limit as any) * 1)
+          .skip(((page as any) - 1) * (limit as any))
+          .exec();
+    
+        // get total documents in the Posts collection
+        const count = await UserModel.countDocuments();
+    
+        // return response with posts, total pages, and current page
+        res.json({
+          allusers,
+          totalPages: Math.ceil(count / (limit as any)),
+          currentPage: page,
+        });
+      } catch (err) {
+        console.error(err.message);
+      }
     }
-}
-
+        
+    
 export const deleteUser = async (req: express.Request, res: express.Response) => {
     try{
         const { id } = req.params;

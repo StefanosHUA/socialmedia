@@ -81,43 +81,26 @@ export const deleteComment = async(req: express.Request, res: express.Response) 
 
 
 export const getCommentsfromPost = async(req: express.Request, res: express.Response) => {
+    const { page = 1, limit = 10 } = req.query;
+    var { id } = req.params
     try{
-
-        var { id, pageNum } = req.params
-        
-        const comments = await getCommentsbyPostId(id)
-        
-
-        function getPaginatedData(page: number, pageSize: number): any {
-            const startIndex = (page - 1) * pageSize;
-            const endIndex = page * pageSize;
-            const paginatedData = comments.slice(startIndex, endIndex);
-            const totalItems = comments.length;
-            const totalPages = Math.ceil(totalItems / pageSize);
+        const comments = await getCommentsbyPostId(id) 
+            // execute query with page and limit values
           
-            return {
-              data: paginatedData,
-             
-            currentPage: page,
-            totalPages: totalPages,
-            totalItems: totalItems,
-              
-            };
-          }
-
-        var y:number = +pageNum
-
-        // const page = 1;
-        const pageSize = 10;
-        const result = getPaginatedData(y, pageSize);
-        // console.log(currUser.id)
-
-        return res.status(200).json(result);
-        
+          .limit((limit as any) * 1)
+          .skip(((page as any) - 1) * (limit as any))
+          .exec();
     
-
-    } catch (error) {
-        console.log(error);
-        return res.sendStatus(400);
+        // get total documents in the Posts collection
+        const count = comments.length
+    
+        // return response with posts, total pages, and current page
+        res.json({
+          comments,
+          totalPages: Math.ceil(count / (limit as any)),
+          currentPage: page,
+        });
+      } catch (err) {
+        console.error(err.message);
+      }
     }
-}
